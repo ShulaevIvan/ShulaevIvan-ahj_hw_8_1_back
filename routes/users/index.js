@@ -10,13 +10,7 @@ router.post('/users', async (ctx) => {
         const { name, token } = JSON.parse(ctx.request.body)
         const check = database.users.find((user) => user.name == name)
         const checkToken = database.users.find((user) => user.token === token)
-
-        if (check && check.token === token) {
-            ctx.response.status = 200
-            ctx.response.body = { status: 'user exists' }
-            return
-        }
-        else if (check === undefined && !checkToken) {
+        if (check === undefined && !checkToken && name !== 'user exists') {
             const user = database.createUser(name, token);
             ctx.response.status = 201;
             ctx.response.body = { user };

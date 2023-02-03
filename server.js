@@ -18,8 +18,12 @@ const wsServer = new WS.Server({
 });
 
 const chat = [];
+const archive = [];
 
 wsServer.on('connection', (ws) => {
+    Array.from(wsServer.clients)
+        .filter(client => client.readyState === WS.OPEN  && client.newConnect !== false)
+        .forEach(client => client.send(JSON.stringify({archive: archive})));
     const chatId = uuidv4();
     database.users.forEach((user, i) => {
         ws.uniqueID = { user: user.name, chatId: chatId }
@@ -27,7 +31,8 @@ wsServer.on('connection', (ws) => {
             const client = {
                 dbId: user.id,
                 chatId: chatId,
-                name: user.name
+                name: user.name,
+                newConnect: true
             }
             activeClients.push(client);
         }
@@ -44,7 +49,6 @@ wsServer.on('connection', (ws) => {
         .forEach(client => client.send(JSON.stringify({clients: activeClients})));
 
     ws.on('close', (e) => {
-        
         database.users.forEach((user, i) => {
             if (user.name === ws.uniqueID.user) {
                 database.users.splice(i, 1);
@@ -57,43 +61,28 @@ wsServer.on('connection', (ws) => {
     });
 
     ws.on('message', (e) => {
-        chat.push()
         const message = e.toString()
+        const nowTime = new Date().toLocaleString('ru', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: false,
+        });
         chat.push({user: ws.uniqueID, message: message});
-        const eventData = JSON.stringify({chat: [{user: ws.uniqueID.user, message: message}]})
+        if (!archive.includes(ws.uniqueID.user) && !archive.includes(message) && !archive.includes(nowTime)) {
+            archive.push({user: ws.uniqueID.user, message: message, time: nowTime})
+        }
+        
+        const eventData = JSON.stringify({chat: [{user: ws.uniqueID.user, message: message, time: nowTime}]})
         Array.from(wsServer.clients)
         .filter(client => client.readyState === WS.OPEN)
         .forEach(client => client.send(eventData));
     })
 });
 
-
-
-
-
-
-
-// wsServer.on('connection', (ws) => {
-//     ws.uniqueID = uuidv4();
-//     activeClients.push(ws.uniqueID);
-//     ws.send(ws.uniqueID)
-//     ws.on('close', (e) => {
-//         activeClients.forEach((clientId, i) => {
-//             if (clientId === ws.uniqueID) {
-//                 activeClients.splice(i, 1);
-//             }
-//         })
-//     });
-  
-//     ws.on('message', (e) => {
-//         const message = e.toString();
-//         const checkDuplicate = database.users.find((user) => user.name === message)
-//         if (checkDuplicate) return ws.send('user exists in database');
-//         database.createUser(ws.uniqueID, message);
-//         ws.send('welcome to chat')
-
-//     })
-//   });
 
 app.use(koaBody({
     urlencoded:true,
