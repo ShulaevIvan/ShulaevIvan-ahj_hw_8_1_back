@@ -1,30 +1,26 @@
-const database  = {
-    id: 0,
-    users: [],
+const database = {
+  id: 0,
+  users: [],
+  activeClients: [],
+  chat: [],
+  archive: [],
 
-    generateId() {
-        this.id += 1
-        return this.id;
-    },
+  generateId() {
+    this.id += 1;
+    return this.id;
+  },
 
-    createUser(userName, token) {
-        const id = this.generateId()
-        const user = {
-            id: id,
-            name: userName,
-            token: token
+  createUser(userName, token) {
+    const id = this.generateId();
+    const user = {
+      id: id,
+      name: userName,
+      token: token,
 
-        };
-        this.users.push(user);
-        return user;
-    },
-
-    removeUser() {
-        console.log('test');
-    },
-
-}
-
-
+    };
+    this.users.push(user);
+    return user;
+  },
+};
 
 module.exports = database;
